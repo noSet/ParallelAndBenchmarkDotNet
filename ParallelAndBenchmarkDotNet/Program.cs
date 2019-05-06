@@ -16,7 +16,6 @@ namespace ParallelAndBenchmarkDotNet
             Console.ReadKey();
         }
 
-
         [ClrJob(baseline: true), CoreJob, CoreRtJob]
         [RPlotExporter, RankColumn]
         public class PartitionTest
@@ -34,6 +33,7 @@ namespace ParallelAndBenchmarkDotNet
                 int sum = 0;
                 for (int i = 0; i < _randomInt.Count; i++)
                 {
+                    // 自旋模拟计算密集
                     Thread.SpinWait(20);
                     sum += _randomInt[i];
                 }
@@ -47,6 +47,7 @@ namespace ParallelAndBenchmarkDotNet
                 int allsum = 0;
                 Parallel.For(0, _randomInt.Count, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, () => 0, (i, state, sum) =>
                 {
+                    // 自旋模拟计算密集
                     Thread.SpinWait(20);
                     sum += _randomInt[i];
                     return sum;
@@ -61,6 +62,7 @@ namespace ParallelAndBenchmarkDotNet
                 int allsum = 0;
                 Parallel.For(0, _randomInt.Count, () => 0, (i, state, sum) =>
                 {
+                    // 自旋模拟计算密集
                     Thread.SpinWait(20);
                     sum += _randomInt[i];
                     return sum;
