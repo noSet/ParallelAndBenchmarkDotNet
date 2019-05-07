@@ -48,8 +48,8 @@ namespace ParallelAndBenchmarkDotNet
             int allsum = 0;
             Parallel.For(0, _randomInt.Count, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, () => 0, (i, state, sum) =>
             {
-                    // 自旋模拟计算密集
-                    Thread.SpinWait(20);
+                // 自旋模拟计算密集
+                Thread.SpinWait(20);
                 sum += _randomInt[i];
                 return sum;
             }, sum => Interlocked.Add(ref allsum, sum));
@@ -63,8 +63,8 @@ namespace ParallelAndBenchmarkDotNet
             int allsum = 0;
             Parallel.For(0, _randomInt.Count, () => 0, (i, state, sum) =>
             {
-                    // 自旋模拟计算密集
-                    Thread.SpinWait(20);
+                // 自旋模拟计算密集
+                Thread.SpinWait(20);
                 sum += _randomInt[i];
                 return sum;
             }, sum => Interlocked.Add(ref allsum, sum));
