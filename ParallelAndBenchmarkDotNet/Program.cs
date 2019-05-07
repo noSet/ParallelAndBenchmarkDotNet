@@ -8,68 +8,68 @@ using BenchmarkDotNet.Running;
 
 namespace ParallelAndBenchmarkDotNet
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             BenchmarkRunner.Run<PartitionTest>();
             Console.ReadKey();
         }
+    }
 
-        [ClrJob(baseline: true), CoreJob, CoreRtJob]
-        [RPlotExporter, RankColumn]
-        public class PartitionTest
+    [ClrJob(baseline: true), CoreJob, CoreRtJob]
+    [RPlotExporter, RankColumn]
+    public class PartitionTest
+    {
+        private readonly List<int> _randomInt;
+
+        public PartitionTest()
         {
-            private readonly List<int> _randomInt;
+            _randomInt = Enumerable.Range(1, 1000).ToList();
+        }
 
-            public PartitionTest()
+        [Benchmark]
+        public int Normal()
+        {
+            int sum = 0;
+            for (int i = 0; i < _randomInt.Count; i++)
             {
-                _randomInt = Enumerable.Range(1, 1000).ToList();
+                // 自旋模拟计算密集
+                Thread.SpinWait(20);
+                sum += _randomInt[i];
             }
 
-            [Benchmark]
-            public int Normal()
+            return sum;
+        }
+
+        [Benchmark]
+        public int Partition()
+        {
+            int allsum = 0;
+            Parallel.For(0, _randomInt.Count, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, () => 0, (i, state, sum) =>
             {
-                int sum = 0;
-                for (int i = 0; i < _randomInt.Count; i++)
-                {
                     // 自旋模拟计算密集
                     Thread.SpinWait(20);
-                    sum += _randomInt[i];
-                }
-
+                sum += _randomInt[i];
                 return sum;
-            }
+            }, sum => Interlocked.Add(ref allsum, sum));
 
-            [Benchmark]
-            public int Partition()
+            return allsum;
+        }
+
+        [Benchmark]
+        public int PartitionDefault()
+        {
+            int allsum = 0;
+            Parallel.For(0, _randomInt.Count, () => 0, (i, state, sum) =>
             {
-                int allsum = 0;
-                Parallel.For(0, _randomInt.Count, new ParallelOptions() { MaxDegreeOfParallelism = Environment.ProcessorCount }, () => 0, (i, state, sum) =>
-                {
                     // 自旋模拟计算密集
                     Thread.SpinWait(20);
-                    sum += _randomInt[i];
-                    return sum;
-                }, sum => Interlocked.Add(ref allsum, sum));
+                sum += _randomInt[i];
+                return sum;
+            }, sum => Interlocked.Add(ref allsum, sum));
 
-                return allsum;
-            }
-
-            [Benchmark]
-            public int PartitionDefault()
-            {
-                int allsum = 0;
-                Parallel.For(0, _randomInt.Count, () => 0, (i, state, sum) =>
-                {
-                    // 自旋模拟计算密集
-                    Thread.SpinWait(20);
-                    sum += _randomInt[i];
-                    return sum;
-                }, sum => Interlocked.Add(ref allsum, sum));
-
-                return allsum;
-            }
+            return allsum;
         }
     }
 }
